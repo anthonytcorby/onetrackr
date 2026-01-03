@@ -161,5 +161,6 @@ export const saveLog = async (date: string, text: string, resolutionId: number, 
 
 export const clearAllData = async () => {
     const db = await dbPromise;
-    await db.execAsync('DELETE FROM resolutions; DELETE FROM logs;');
+    await db.runAsync('DELETE FROM resolutions');
+    await db.runAsync('DELETE FROM logs');
 };
