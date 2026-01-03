@@ -1,7 +1,7 @@
 import { View, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { ThemedText } from '@/components/ThemedText';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -13,6 +13,23 @@ export default function GoalSetupScreen() {
     const { setGoal, confirmGoal } = useApp();
     const [text, setText] = useState('');
     const [isCommitting, setIsCommitting] = useState(false);
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            () => setKeyboardVisible(true)
+        );
+        const keyboardDidHideListener = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => setKeyboardVisible(false)
+        );
+
+        return () => {
+            keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+        };
+    }, []);
 
     const handleCommit = async () => {
         if (text.trim().length === 0) return;
@@ -52,7 +69,10 @@ export default function GoalSetupScreen() {
                         </ThemedText>
                     </View>
 
-                    <View style={styles.inputContainer}>
+                    <View style={[
+                        styles.inputContainer,
+                        keyboardVisible ? styles.inputContainerActive : styles.inputContainerCentered
+                    ]}>
                         <TextInput
                             style={styles.input}
                             multiline
@@ -106,6 +126,11 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         flex: 1,
+    },
+    inputContainerCentered: {
+        justifyContent: 'center',
+    },
+    inputContainerActive: {
         justifyContent: 'flex-start',
         paddingTop: 40,
     },
