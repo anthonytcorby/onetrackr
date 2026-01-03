@@ -106,7 +106,8 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
+        paddingTop: 40,
     },
     input: {
         fontFamily: Typography.fonts.sans,
