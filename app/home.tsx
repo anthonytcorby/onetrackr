@@ -137,7 +137,7 @@ export default function HomeScreen() {
                     ) : (
                         <View style={styles.completedState}>
                             <ThemedText variant="body" style={styles.completedText}>
-                                ✓ Today complete
+                                {todayData?.isPaused ? 'Paused for today' : '✓ Today complete'}
                             </ThemedText>
                         </View>
                     )}
