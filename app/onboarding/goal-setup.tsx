@@ -147,6 +147,7 @@ const styles = StyleSheet.create({
     counterContainer: {
         alignItems: 'flex-end',
         marginTop: 8,
+        marginBottom: 16,
     },
     counter: {
         opacity: 0.5,
