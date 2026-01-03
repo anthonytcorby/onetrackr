@@ -10,6 +10,7 @@ import {
     saveLog as dbSaveLog,
     getAllLogs,
     clearAllData,
+    archiveResolution as dbArchiveResolution,
     Resolution,
     DayLog
 } from '@/db';
@@ -22,10 +23,11 @@ interface AppContextType {
     setReminder: (time: string | null) => Promise<void>;
     setGoal: (text: string) => Promise<void>;
     confirmGoal: () => Promise<void>;
-    logDay: (date: string, text: string) => Promise<void>;
-    saveEntry: (date: string, text: string) => Promise<void>; // Alias for logDay
+    logDay: (date: string, text: string, status?: string, sentiment?: string | null) => Promise<void>;
+    saveEntry: (date: string, text: string, status?: string, sentiment?: string | null) => Promise<void>;
     resetApp: () => Promise<void>;
-    resetGoal: () => Promise<void>; // Alias for resetApp
+    resetGoal: () => Promise<void>;
+    archiveGoal: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -41,13 +43,16 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
             try {
                 await initDB();
                 const res = await getResolution();
-                const allLogs = await getAllLogs();
-
                 setResolution(res);
 
-                const logsMap = new Map<string, DayLog>();
-                allLogs.forEach(l => logsMap.set(l.date, l));
-                setLogs(logsMap);
+                if (res) {
+                    const allLogs = await getAllLogs(res.id);
+                    const logsMap = new Map<string, DayLog>();
+                    allLogs.forEach(l => logsMap.set(l.date, l));
+                    setLogs(logsMap);
+                } else {
+                    setLogs(new Map());
+                }
             } catch (e) {
                 console.error("Failed to load data", e);
             } finally {
@@ -81,19 +86,29 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         setResolution(res);
     };
 
-    const logDay = async (date: string, text: string) => {
-        await dbSaveLog(date, text);
-        // Optimistic update or reload? Optimistic is better.
+    const logDay = async (date: string, text: string, status: string = 'completed', sentiment: string | null = null) => {
+        if (!resolution) return; // Should not happen if logging
+        await dbSaveLog(date, text, resolution.id, status, sentiment);
+
         setLogs(prev => {
             const newMap = new Map(prev);
             const existing = newMap.get(date);
             newMap.set(date, {
                 date,
                 text,
-                created_at: existing ? existing.created_at : new Date().toISOString()
+                created_at: existing ? existing.created_at : new Date().toISOString(),
+                status: status as any,
+                sentiment: sentiment as any,
+                resolution_id: resolution.id
             });
             return newMap;
         });
+    };
+
+    const archiveGoal = async () => {
+        await dbArchiveResolution();
+        setResolution(null);
+        setLogs(new Map());
     };
 
     const resetApp = async () => {
@@ -112,9 +127,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
             setGoal,
             confirmGoal,
             logDay,
-            saveEntry: logDay, // Alias
+            saveEntry: logDay,
             resetApp,
-            resetGoal: resetApp, // Alias
+            resetGoal: resetApp,
+            archiveGoal
         }}>
             {children}
         </AppContext.Provider>

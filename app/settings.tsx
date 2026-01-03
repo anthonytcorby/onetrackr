@@ -1,14 +1,16 @@
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/context/AppContext';
 import { ThemedText } from '@/components/ThemedText';
 import Colors from '@/constants/Colors';
 import { Feather } from '@expo/vector-icons';
+import { useState } from 'react';
 
 export default function SettingsScreen() {
-    const { resolution, resetApp } = useApp();
+    const { resolution, resetApp, archiveGoal } = useApp();
     const router = useRouter();
+    const [biometricEnabled, setBiometricEnabled] = useState(false);
 
     const handleResetGoal = () => {
         Alert.alert(
@@ -28,8 +30,41 @@ export default function SettingsScreen() {
         );
     };
 
+    const handleArchive = () => {
+        Alert.alert(
+            'Complete & Archive?',
+            'This will save your current goal to history and let you start a new one.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Archive',
+                    style: 'default',
+                    onPress: async () => {
+                        await archiveGoal();
+                        router.replace('/');
+                    },
+                },
+            ]
+        );
+    };
+
     const handleExportData = () => {
-        Alert.alert('Export Data', 'Feature coming soon.');
+        Alert.alert(
+            'Export Data',
+            'Download your year in review?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'PDF', onPress: () => Alert.alert('Coming Soon', 'PDF export will be available in the next update.') },
+                { text: 'CSV', onPress: () => Alert.alert('Coming Soon', 'CSV export will be available in the next update.') }
+            ]
+        );
+    };
+
+    const handlePauseInfo = () => {
+        Alert.alert(
+            'Life Happens',
+            'Missing a day isn’t failure. You can pause your goal for a day to keep your momentum without breaking your streak. Continuous perfection is not the goal; persistence is.'
+        );
     };
 
     return (
@@ -55,26 +90,56 @@ export default function SettingsScreen() {
                             Started {resolution?.start_date}
                         </ThemedText>
                     </View>
+
+                    <TouchableOpacity style={styles.row} onPress={handleArchive}>
+                        <ThemedText variant="body">Complete & Archive Goal</ThemedText>
+                        <Feather name="archive" size={20} color={Colors.text} />
+                    </TouchableOpacity>
                 </View>
 
-                {/* Actions */}
+                {/* Data */}
                 <View style={styles.section}>
                     <ThemedText variant="caption" style={styles.sectionLabel}>
-                        DATA
+                        DATA & PRIVACY
                     </ThemedText>
                     <TouchableOpacity style={styles.row} onPress={handleExportData}>
-                        <ThemedText variant="body">Export data</ThemedText>
-                        <Feather name="chevron-right" size={20} color={Colors.text} />
+                        <ThemedText variant="body">Export data (PDF/CSV)</ThemedText>
+                        <Feather name="download" size={20} color={Colors.text} />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.row} onPress={() => router.push('/settings-reminder')}>
                         <ThemedText variant="body">Change reminder</ThemedText>
-                        <Feather name="chevron-right" size={20} color={Colors.text} />
+                        <Feather name="clock" size={20} color={Colors.text} />
                     </TouchableOpacity>
+
+                    {/* Biometric Toggle */}
+                    <View style={styles.row}>
+                        <ThemedText variant="body">Biometric Lock</ThemedText>
+                        <Switch
+                            value={biometricEnabled}
+                            onValueChange={setBiometricEnabled}
+                            trackColor={{ false: '#E0E0E0', true: Colors.accent }}
+                        />
+                    </View>
+                </View>
+
+                {/* Philosophy */}
+                <View style={styles.section}>
+                    <ThemedText variant="caption" style={styles.sectionLabel}>
+                        PHILOSOPHY
+                    </ThemedText>
+                    <TouchableOpacity style={styles.row} onPress={handlePauseInfo}>
+                        <ThemedText variant="body">Pause Days & Flexibility</ThemedText>
+                        <Feather name="info" size={20} color={Colors.text} />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Danger Zone */}
+                <View style={styles.section}>
                     <TouchableOpacity style={styles.row} onPress={handleResetGoal}>
                         <ThemedText variant="body" style={styles.dangerText}>
-                            Reset goal
+                            Reset everything
                         </ThemedText>
-                        <Feather name="chevron-right" size={20} color={Colors.text} />
+                        <Feather name="trash-2" size={20} color={Colors.accent} />
                     </TouchableOpacity>
                 </View>
 
@@ -134,6 +199,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 16,
         gap: 8,
+        marginBottom: 16,
     },
     goalText: {
         fontStyle: 'italic',

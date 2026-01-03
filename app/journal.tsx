@@ -53,6 +53,9 @@ export default function JournalScreen() {
                         const year = dateObj.getFullYear();
                         const fullDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
+                        const isPaused = log.status === 'paused';
+                        const bgColors = isPaused ? ['#E0E0E0', '#CDCDB4'] : ['#FFE566', '#FFD700'];
+
                         return (
                             <View key={log.date} style={styles.entryContainer}>
                                 <View style={styles.dateColumn}>
@@ -61,7 +64,7 @@ export default function JournalScreen() {
                                     <ThemedText variant="caption" style={styles.year}>{year}</ThemedText>
                                 </View>
                                 <LinearGradient
-                                    colors={['#FFE566', '#FFD700']}
+                                    colors={bgColors as any}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 1 }}
                                     style={styles.textColumn}
@@ -69,6 +72,11 @@ export default function JournalScreen() {
                                     <ThemedText variant="body" style={styles.entryText}>
                                         {log.text === '✓' ? 'Day complete' : log.text}
                                     </ThemedText>
+                                    {log.sentiment && (
+                                        <ThemedText variant="caption" style={{ opacity: 0.6, marginTop: 4 }}>
+                                            Mood: {log.sentiment.charAt(0).toUpperCase() + log.sentiment.slice(1)}
+                                        </ThemedText>
+                                    )}
                                     <ThemedText variant="caption" style={styles.fullDate}>
                                         {fullDate}
                                     </ThemedText>

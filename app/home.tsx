@@ -44,10 +44,12 @@ export default function HomeScreen() {
             const isPast = dateStr < today;
             const isToday = dateStr === today;
             const isFuture = dateStr > today;
-            const hasLog = logs.has(dateStr);
+            const log = logs.get(dateStr);
+            const hasLog = !!log;
+            const isPaused = log?.status === 'paused';
             const isMissed = isPast && !hasLog;
 
-            list.push({ index: i + 1, date: dateStr, isPast, isToday, isFuture, hasLog, isMissed });
+            list.push({ index: i + 1, date: dateStr, isPast, isToday, isFuture, hasLog, isPaused, isMissed });
         }
         return list;
     }, [startDate, logs, today]);
@@ -163,7 +165,7 @@ const DayBox = React.memo(({ day, styles }: { day: any, styles: any }) => {
     // Ideally we track previous state, but for "stutter in" effect on load (which looks cool), we can just animate mount.
     // A quick stutter check-in looks nice even on refresh for the active day.
 
-    const shouldAnimate = day.isToday && day.hasLog;
+    const shouldAnimate = day.isToday && day.hasLog && !day.isPaused;
     const scaleAnim = useRef(new Animated.Value(shouldAnimate ? 0 : 1)).current;
 
     useEffect(() => {
@@ -207,7 +209,8 @@ const DayBox = React.memo(({ day, styles }: { day: any, styles: any }) => {
         <View
             style={[
                 styles.dayBox,
-                day.hasLog && styles.dayComplete,
+                (day.hasLog && !day.isPaused) && styles.dayComplete,
+                day.isPaused && styles.dayPaused,
                 day.isMissed && styles.dayMissed,
                 day.isToday && styles.dayToday,
                 day.isFuture && styles.dayFuture,
@@ -291,6 +294,9 @@ const styles = StyleSheet.create({
     },
     dayComplete: {
         backgroundColor: Colors.accent, // Gold for completed
+    },
+    dayPaused: {
+        backgroundColor: '#D3D3D3', // Muted, neutral
     },
     dayMissed: {
         backgroundColor: '#4A4A4A', // Muted charcoal for missed

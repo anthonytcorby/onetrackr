@@ -81,8 +81,42 @@ export const getGreeting = (
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-    // Calculate total completed days
-    const completedDays = logs.size;
+    // Calculate total completed days (exclude paused)
+    let completedDays = 0;
+    logs.forEach(log => {
+        // legacy logs might not have status, assume 'completed'
+        if (!log.status || log.status === 'completed') {
+            completedDays++;
+        }
+    });
+
+    // Determine Streak Status (Paused days maintain streak but don't count)
+    let streakActive = false;
+    let checkDate = new Date(yesterday);
+
+    // Check back up to X days to find continuity
+    for (let i = 0; i < 365; i++) {
+        const checkStr = checkDate.toISOString().split('T')[0];
+        // Stop if we go before start of logs? 
+        // We rely on logs map.
+
+        const log = logs.get(checkStr);
+        if (!log) {
+            // Found a hole -> Streak broken
+            streakActive = false;
+            break;
+        }
+
+        if (log.status === 'paused') {
+            // Paused day -> Ignored, check previous day
+            checkDate.setDate(checkDate.getDate() - 1);
+            continue;
+        }
+
+        // If we found a completed day (or legacy day without status)
+        streakActive = true;
+        break;
+    }
 
     // Determine Context
     let context: GreetingContext = 'default';
@@ -99,12 +133,12 @@ export const getGreeting = (
     else if (completedDays === 0) {
         context = 'first';
     }
-    // 3. MISSED DAY YESTERDAY
-    else if (!logs.has(yesterdayStr) && completedDays > 0) {
+    // 3. MISSED DAY (Streak broken, but started)
+    else if (!streakActive && completedDays > 0) {
         context = 'missed';
     }
-    // 2. STREAK ACTIVE (Logged yesterday)
-    else if (logs.has(yesterdayStr)) {
+    // 2. STREAK ACTIVE (Found continuity)
+    else if (streakActive) {
         context = 'streak';
     }
 
