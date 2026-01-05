@@ -7,11 +7,12 @@ import { ThemedText } from '@/components/ThemedText';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import Colors from '@/constants/Colors';
 import { Typography } from '@/constants/Typography';
+import { getLocalDateString } from '@/utils/dates';
 
 export default function InputScreen() {
     const router = useRouter();
     const { logDay, logs } = useApp();
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const existingLog = logs.get(today);
 
     const [text, setText] = useState(existingLog?.text || '');

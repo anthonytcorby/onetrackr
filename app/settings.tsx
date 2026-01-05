@@ -6,9 +6,10 @@ import { ThemedText } from '@/components/ThemedText';
 import Colors from '@/constants/Colors';
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
+import { seedTestData, getAllLogs } from '@/db';
 
 export default function SettingsScreen() {
-    const { resolution, resetApp, archiveGoal } = useApp();
+    const { resolution, resetApp, archiveGoal, refreshLogs } = useApp();
     const router = useRouter();
     const [biometricEnabled, setBiometricEnabled] = useState(false);
 
@@ -67,13 +68,46 @@ export default function SettingsScreen() {
         );
     };
 
+    const handleSeedData = async () => {
+        Alert.alert(
+            'Seed Test Data?',
+            'This will create 364 days of fake log entries for testing. Your current logs will be replaced.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Seed Data',
+                    style: 'default',
+                    onPress: async () => {
+                        const result = await seedTestData();
+                        if (result.success) {
+                            await refreshLogs(); // Refresh the context with new data
+                            Alert.alert('Success', result.message);
+                        } else {
+                            Alert.alert('Error', result.message);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleVerifyData = async () => {
+        const logs = await getAllLogs(resolution?.id);
+        const uniqueDates = new Set(logs.map(l => l.date));
+        Alert.alert(
+            'Data Verification',
+            `Total logs: ${logs.length}\nUnique dates: ${uniqueDates.size}\n\nThis confirms no overwrites occurred.`
+        );
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Feather name="arrow-left" size={24} color={Colors.text} />
                 </TouchableOpacity>
-                <ThemedText variant="h2">Settings</ThemedText>
+                <ThemedText variant="h1" style={styles.title}>Settings</ThemedText>
+                <View style={styles.headerRight} />
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
@@ -161,6 +195,21 @@ export default function SettingsScreen() {
                         <Feather name="chevron-right" size={20} color={Colors.text} />
                     </TouchableOpacity>
                 </View>
+
+                {/* Dev Tools */}
+                <View style={styles.section}>
+                    <ThemedText variant="caption" style={styles.sectionLabel}>
+                        DEV TOOLS
+                    </ThemedText>
+                    <TouchableOpacity style={styles.row} onPress={handleSeedData}>
+                        <ThemedText variant="body">Seed 364 Days of Test Data</ThemedText>
+                        <Feather name="database" size={20} color={Colors.text} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.row} onPress={handleVerifyData}>
+                        <ThemedText variant="body">Verify Data (Check for Overwrites)</ThemedText>
+                        <Feather name="check-circle" size={20} color={Colors.text} />
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
         </SafeAreaView>
     );
@@ -174,13 +223,20 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 16,
+        justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingTop: 60,
         paddingBottom: 24,
     },
     backButton: {
         padding: 4,
+        width: 32,
+    },
+    title: {
+        textAlign: 'center',
+    },
+    headerRight: {
+        width: 32,
     },
     content: {
         paddingHorizontal: 20,

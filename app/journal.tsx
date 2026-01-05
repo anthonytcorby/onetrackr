@@ -15,10 +15,7 @@ export default function JournalScreen() {
 
     const sortedLogs = useMemo(() => {
         return Array.from(logs.values())
-            .filter(log => log.text && log.text !== '✓') // Filter out empty or checkmark-only logs if desired? User said "lists all the diary entries". Maybe keep them all but style differently? 
-            // The request says "diary entries", usually implying text. "✓" is technically an entry but maybe not a "diary" entry. 
-            // Let's include everything for now, but maybe visually distinguish or hide plain checks if they have no text. 
-            // Actually, reflection.tsx saves '✓' for skip. Let's show everything but if it's just a check, maybe show "Day Complete".
+            .filter(log => log.text) // Keep all logs that have text (including '✓')
             .sort((a, b) => a.date.localeCompare(b.date)); // Chronological order
     }, [logs]);
 
@@ -28,7 +25,7 @@ export default function JournalScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Feather name="arrow-left" size={24} color={Colors.text} />
                 </TouchableOpacity>
-                <ThemedText variant="h2" style={styles.title}>
+                <ThemedText variant="h1" style={styles.title}>
                     Journal
                 </ThemedText>
                 <View style={styles.headerRight} />
@@ -105,9 +102,11 @@ const styles = StyleSheet.create({
     },
     backButton: {
         padding: 4,
+        width: 32,
     },
     title: {
         fontFamily: Typography.fonts.serif,
+        textAlign: 'center',
     },
     headerRight: {
         width: 32,

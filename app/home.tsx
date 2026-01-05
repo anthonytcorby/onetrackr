@@ -10,6 +10,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { Feather } from '@expo/vector-icons';
 
 import { getGreeting } from '@/utils/greetings';
+import { getLocalDateString } from '@/utils/dates';
 
 // Grid constants
 const DAYS = 365;
@@ -26,7 +27,7 @@ export default function HomeScreen() {
     }, [resolution?.user_name, logs, resolution?.start_date]);
 
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const startDate = resolution?.start_date ? new Date(resolution.start_date + 'T12:00:00') : new Date();
 
     const days = useMemo(() => {
@@ -254,8 +255,9 @@ const styles = StyleSheet.create({
     },
     greeting: {
         fontFamily: Typography.fonts.serif,
-        fontSize: 24,
-        lineHeight: 32,
+        fontSize: 28,
+        lineHeight: 36,
+        textAlign: 'center',
         paddingBottom: 4,
     },
     dateText: {

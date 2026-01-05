@@ -8,6 +8,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import Colors from '@/constants/Colors';
 import { Typography } from '@/constants/Typography';
 import { Feather } from '@expo/vector-icons';
+import { getLocalDateString } from '@/utils/dates';
 
 const PROMPTS = [
     "What was the hardest moment today?",
@@ -26,7 +27,7 @@ export default function ReflectionScreen() {
 
     const prompt = useMemo(() => PROMPTS[Math.floor(Math.random() * PROMPTS.length)], []);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const formattedDate = new Date().toLocaleDateString('en-US', {
         weekday: 'long',
         month: 'long',

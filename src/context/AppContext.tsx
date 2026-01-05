@@ -28,6 +28,7 @@ interface AppContextType {
     resetApp: () => Promise<void>;
     resetGoal: () => Promise<void>;
     archiveGoal: () => Promise<void>;
+    refreshLogs: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -117,6 +118,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         setLogs(new Map());
     };
 
+    const refreshLogs = async () => {
+        const res = await getResolution();
+        setResolution(res);
+        if (res) {
+            const allLogs = await getAllLogs(res.id);
+            const logsMap = new Map<string, DayLog>();
+            allLogs.forEach(l => logsMap.set(l.date, l));
+            setLogs(logsMap);
+        } else {
+            setLogs(new Map());
+        }
+    };
+
     return (
         <AppContext.Provider value={{
             resolution,
@@ -130,7 +144,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
             saveEntry: logDay,
             resetApp,
             resetGoal: resetApp,
-            archiveGoal
+            archiveGoal,
+            refreshLogs
         }}>
             {children}
         </AppContext.Provider>
